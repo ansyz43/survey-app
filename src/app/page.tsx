@@ -1,65 +1,107 @@
-import Image from "next/image";
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import type { Lang } from '@/types/survey'
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [lang, setLang] = useState<Lang | null>(null)
+
+  const startSurvey = async () => {
+    if (!lang) return
+    setLoading(true)
+    try {
+      const res = await fetch('/api/survey/start', { method: 'POST' })
+      const data = await res.json()
+      if (data.sessionId) {
+        sessionStorage.setItem('surveySessionId', data.sessionId)
+        sessionStorage.setItem('surveyLang', lang)
+        router.push('/survey')
+      }
+    } catch {
+      setLoading(false)
+    }
+  }
+
+  // Step 1: Language selection
+  if (!lang) {
+    return (
+      <main className="flex flex-col items-center justify-center min-h-screen px-6 py-12">
+        <div className="max-w-md w-full text-center space-y-8">
+          <div className="text-5xl">🌐</div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            请选择语言 / Выберите язык
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+          <div className="flex flex-col gap-4">
+            <button
+              onClick={() => setLang('zh')}
+              className="w-full py-5 px-8 bg-white border-2 border-gray-200 text-lg font-semibold rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-colors"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              🇨🇳 中文
+            </button>
+            <button
+              onClick={() => setLang('ru')}
+              className="w-full py-5 px-8 bg-white border-2 border-gray-200 text-lg font-semibold rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-colors"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+              🇷🇺 Русский
+            </button>
+          </div>
         </div>
       </main>
-    </div>
-  );
+    )
+  }
+
+  // Step 2: Welcome screen
+  const t = {
+    zh: {
+      title: '🎨 创意内容调查',
+      desc: '我们正在研究中国市场对来自海参崴（符拉迪沃斯托克）的数字服务的需求。',
+      time: '本问卷大约需要5–7分钟完成，共17道题。',
+      anon: '您的回答将完全匿名，仅用于市场研究目的。',
+      start: '开始填写问卷 →',
+      loading: '加载中...',
+      consent: '点击开始即表示您同意参与本次匿名调查',
+      back: '← 换语言',
+    },
+    ru: {
+      title: '🎨 Исследование цифровых услуг',
+      desc: 'Мы изучаем спрос на цифровые услуги из Владивостока на китайском рынке.',
+      time: 'Опрос займёт 5–7 минут, всего 17 вопросов.',
+      anon: 'Ваши ответы полностью анонимны и используются только для исследования.',
+      start: 'Начать опрос →',
+      loading: 'Загрузка...',
+      consent: 'Нажимая «Начать», вы соглашаетесь участвовать в анонимном опросе',
+      back: '← Сменить язык',
+    },
+  }[lang]
+
+  return (
+    <main className="flex flex-col items-center justify-center min-h-screen px-6 py-12">
+      <div className="max-w-md w-full text-center space-y-8">
+        <div className="space-y-4">
+          <h1 className="text-3xl font-bold text-gray-900">{t.title}</h1>
+          <p className="text-lg text-gray-600">{t.desc}</p>
+          <p className="text-gray-500">{t.time}</p>
+          <p className="text-gray-500 text-sm">{t.anon}</p>
+        </div>
+
+        <button
+          onClick={startSurvey}
+          disabled={loading}
+          className="w-full py-4 px-8 bg-blue-600 text-white text-lg font-semibold rounded-2xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? t.loading : t.start}
+        </button>
+
+        <div className="flex justify-between items-center">
+          <button onClick={() => setLang(null)} className="text-sm text-gray-400 hover:text-gray-600">
+            {t.back}
+          </button>
+          <p className="text-xs text-gray-400">{t.consent}</p>
+        </div>
+      </div>
+    </main>
+  )
 }

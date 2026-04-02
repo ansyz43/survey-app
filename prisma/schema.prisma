@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SurveyResponse {
+  id        String   @id @default(uuid())
+  sessionId String   @unique
+
+  // Block A — Demographics
+  age        String?
+  gender     String?
+  occupation String?
+
+  // Block B — Content Consumption
+  paidContentTypes String[]
+  monthlySpend     String?
+  platforms        String[]
+  contentTopics    String[]
+  appealFactors    String[]
+
+  // Block C — Vladivostok Attitude
+  vlkContentAware   String?
+  desiredContent    String[]
+  preferredPlatform String?
+  buyVlkProduct     String?
+
+  // Block D — Purchase Behavior
+  purchaseChannels String[]
+  priceWillingness String?
+  purchaseFactors  String[]
+
+  // Block E — Open Questions
+  openProduct String?
+  openCity    String?
+
+  // System fields
+  startedAt        DateTime @default(now())
+  completedAt      DateTime?
+  durationSeconds  Int?
+  deviceType       String?
+  userAgent        String?
+  isSuspicious     Boolean  @default(false)
+  suspicionReasons String[]
+  completionRate   Float    @default(0)
+  dropOffQuestion  String?
+  isPartial        Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Admin {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model AnalysisResult {
+  id             String   @id @default(uuid())
+  prompt         String
+  result         String
+  model          String
+  totalResponses Int
+  createdAt      DateTime @default(now())
+}
