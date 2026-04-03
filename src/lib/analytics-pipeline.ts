@@ -17,30 +17,98 @@ import { prisma } from './db'
 import { questions } from './questions'
 import { computeKeyInsights, type CrossTabResult, type FrequencyRow, type CorrelationResult } from './stats'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL || undefined,
-})
+// ── Resilient OpenAI client with proxy fallback + retry ──────────
+const API_KEY = process.env.OPENAI_API_KEY
+const PROXY_URL = process.env.OPENAI_BASE_URL
+const DIRECT_URL = 'https://api.openai.com/v1'
 const MODEL = process.env.OPENAI_MODEL || 'gpt-5.4'
+const MAX_RETRIES = 3
+const RETRY_DELAY_MS = 2000
+
+function makeClient(baseURL?: string): OpenAI {
+  return new OpenAI({ apiKey: API_KEY, baseURL: baseURL || undefined })
+}
+
+let proxyClient = PROXY_URL ? makeClient(PROXY_URL) : null
+const directClient = makeClient(DIRECT_URL)
+
+function getClient(): OpenAI {
+  return proxyClient || directClient
+}
+
+function isProxyError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false
+  const msg = err.message.toLowerCase()
+  return (
+    msg.includes('country') ||
+    msg.includes('region') ||
+    msg.includes('territory') ||
+    msg.includes('403') ||
+    msg.includes('502') ||
+    msg.includes('503') ||
+    msg.includes('econnrefused') ||
+    msg.includes('enotfound') ||
+    msg.includes('timeout') ||
+    msg.includes('fetch failed')
+  )
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms))
+}
 
 type ReasoningEffort = 'none' | 'low' | 'medium' | 'high'
 
-/** Вызов GPT через Responses API с управлением reasoning effort */
+/** Вызов GPT с retry + автопереключение прокси → прямой */
 async function callGPT(opts: {
   systemPrompt: string
   userContent: string
   effort: ReasoningEffort
 }) {
-  const response = await openai.responses.create({
-    model: MODEL,
-    instructions: opts.systemPrompt,
-    input: [{ role: 'user', content: opts.userContent + '\n\nRespond with valid JSON only.' }],
-    reasoning: { effort: opts.effort },
-    text: { format: { type: 'json_object' } },
-  })
-  const text = response.output_text || '{}'
-  const tokens = response.usage?.total_tokens || 0
-  return { content: text, tokens }
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const client = getClient()
+    const label = client === proxyClient ? 'proxy' : 'direct'
+
+    try {
+      console.log(`[GPT] attempt ${attempt + 1}/${MAX_RETRIES} via ${label}`)
+
+      const response = await client.responses.create({
+        model: MODEL,
+        instructions: opts.systemPrompt,
+        input: [{ role: 'user', content: opts.userContent + '\n\nRespond with valid JSON only.' }],
+        reasoning: { effort: opts.effort },
+        text: { format: { type: 'json_object' } },
+      })
+
+      const text = response.output_text || '{}'
+      const tokens = response.usage?.total_tokens || 0
+
+      if (!proxyClient && PROXY_URL && label === 'direct') {
+        proxyClient = makeClient(PROXY_URL)
+        console.log('[GPT] proxy client restored for next calls')
+      }
+
+      return { content: text, tokens }
+    } catch (err) {
+      lastError = err
+      console.error(`[GPT] attempt ${attempt + 1} failed (${label}):`, err instanceof Error ? err.message : err)
+
+      if (isProxyError(err) && proxyClient && client === proxyClient) {
+        console.warn('[GPT] proxy error detected, switching to direct OpenAI')
+        proxyClient = null
+      }
+
+      if (attempt < MAX_RETRIES - 1) {
+        const delay = RETRY_DELAY_MS * (attempt + 1)
+        console.log(`[GPT] retrying in ${delay}ms...`)
+        await sleep(delay)
+      }
+    }
+  }
+
+  throw lastError || new Error('All GPT retries exhausted')
 }
 
 // ── Types ────────────────────────────────────────────────────────
