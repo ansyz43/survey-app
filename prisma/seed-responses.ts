@@ -226,7 +226,7 @@ function generateResponse(index: number) {
 
 // ── Main ────────────────────────────────────────────────────
 
-const TOTAL = 1923
+const TOTAL = parseInt(process.env.SEED_COUNT || '3255', 10)
 const BATCH = 200
 
 async function main() {

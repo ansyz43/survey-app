@@ -17,7 +17,10 @@ import { prisma } from './db'
 import { questions } from './questions'
 import { computeKeyInsights, type CrossTabResult, type FrequencyRow, type CorrelationResult } from './stats'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: process.env.OPENAI_BASE_URL || undefined,
+})
 const MODEL = process.env.OPENAI_MODEL || 'gpt-5.4'
 
 type ReasoningEffort = 'none' | 'low' | 'medium' | 'high'
