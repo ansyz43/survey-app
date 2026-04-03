@@ -54,6 +54,52 @@ const STEP_LABELS = [
   'Генерирую рекомендации...',
 ]
 
+/** Маппинг системных названий полей → русский текст */
+const FIELD_RU: Record<string, string> = {
+  age: 'Возраст',
+  gender: 'Пол',
+  occupation: 'Род деятельности',
+  paidContentTypes: 'Тип платного контента',
+  monthlySpend: 'Расходы на контент/мес',
+  platforms: 'Платформы',
+  contentTopics: 'Интересные темы',
+  appealFactors: 'Факторы привлекательности',
+  vlkContentAware: 'Знакомство с VLK-контентом',
+  desiredContent: 'Желаемый контент из VLK',
+  preferredPlatform: 'Предпочтительная платформа',
+  buyVlkProduct: 'Готовность купить товар VLK',
+  purchaseChannels: 'Каналы покупок',
+  priceWillingness: 'Готовность платить',
+  purchaseFactors: 'Факторы покупки',
+  openProduct: 'Открытый вопрос (продукт)',
+  openCity: 'Город',
+}
+
+function fieldRu(name: string): string {
+  return FIELD_RU[name] || name
+}
+
+function pairRu(pair: string): string {
+  return pair.split(' × ').map(f => fieldRu(f)).join(' × ')
+}
+
+const STEP_NAME_RU: Record<string, string> = {
+  Statistics: 'Статистика',
+  ClassifyText: 'Классификация текста',
+  BuildPersonas: 'Построение персон',
+  DemandMatrix: 'Матрица спроса',
+  Recommendations: 'Рекомендации',
+}
+function stepNameRu(name: string): string { return STEP_NAME_RU[name] || name }
+
+function sentimentRu(s: string): string {
+  return s === 'positive' ? 'позитивный' : s === 'negative' ? 'негативный' : s === 'neutral' ? 'нейтральный' : s
+}
+
+function levelRu(l: string): string {
+  return l === 'high' ? 'высокая' : l === 'medium' ? 'средняя' : l === 'low' ? 'низкая' : l
+}
+
 export default function AnalyticsPage() {
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null)
   const [history, setHistory] = useState<HistoryItem[]>([])
@@ -208,7 +254,7 @@ function SummaryTab({ data }: { data: AnalysisData }) {
       {/* Executive summary */}
       {data.executiveSummary && (
         <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
-          <h2 className="font-bold text-purple-900 mb-3">📋 Executive Summary</h2>
+          <h2 className="font-bold text-purple-900 mb-3">📋 Общий анализ</h2>
           <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{data.executiveSummary}</p>
         </div>
       )}
@@ -251,7 +297,7 @@ function SummaryTab({ data }: { data: AnalysisData }) {
                   <h3 className="font-semibold text-sm">{risk.risk}</h3>
                 </div>
                 <p className="text-xs text-gray-500 mb-1">
-                  Вероятность: {risk.probability} · Влияние: {risk.impact}
+                  Вероятность: {levelRu(risk.probability)} · Влияние: {levelRu(risk.impact)}
                 </p>
                 <p className="text-sm text-gray-600">Митигация: {risk.mitigation}</p>
               </div>
@@ -267,7 +313,7 @@ function SummaryTab({ data }: { data: AnalysisData }) {
           <div className="flex gap-2 flex-wrap">
             {data.pipelineSteps.map((s) => (
               <span key={s.step} className="text-xs bg-white border rounded-lg px-3 py-1">
-                Step {s.step}: {s.name} · {s.tokens} tok · {(s.duration_ms / 1000).toFixed(1)}с
+                Шаг {s.step}: {stepNameRu(s.name)} · {s.tokens} ток · {(s.duration_ms / 1000).toFixed(1)}с
               </span>
             ))}
           </div>
@@ -422,7 +468,7 @@ function ThemesTab({ themes }: { themes: AnalysisData['openTextThemes'] }) {
                   <h3 className="font-semibold">{t.theme}</h3>
                   <div className="flex gap-2">
                     <span className={`text-xs px-2 py-0.5 rounded ${t.sentiment === 'positive' ? 'bg-green-100 text-green-700' : t.sentiment === 'negative' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
-                      {t.sentiment === 'positive' ? '😊' : t.sentiment === 'negative' ? '😟' : '😐'} {t.sentiment}
+                      {t.sentiment === 'positive' ? '😊' : t.sentiment === 'negative' ? '😟' : '😐'} {sentimentRu(t.sentiment)}
                     </span>
                     <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">{t.percentage}%</span>
                   </div>
@@ -479,7 +525,7 @@ function StatsTab({ stats }: { stats: AnalysisData['stats'] }) {
             {stats.significantCrossTabs.map((ct, i) => (
               <div key={i} className="bg-white border rounded-xl p-4">
                 <div className="flex justify-between items-start mb-1">
-                  <h3 className="font-medium text-sm">{ct.pair}</h3>
+                  <h3 className="font-medium text-sm">{pairRu(ct.pair)}</h3>
                   <div className="flex gap-2 text-xs">
                     <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">V={ct.cramersV}</span>
                     <span className="bg-green-50 text-green-700 px-2 py-0.5 rounded">p={ct.pValue}</span>
@@ -507,8 +553,8 @@ function StatsTab({ stats }: { stats: AnalysisData['stats'] }) {
               <tbody>
                 {stats.correlations.map((c, i) => (
                   <tr key={i} className="border-b last:border-0">
-                    <td className="py-2 px-3">{c.field1}</td>
-                    <td className="py-2 px-3">{c.field2}</td>
+                    <td className="py-2 px-3">{fieldRu(c.field1)}</td>
+                    <td className="py-2 px-3">{fieldRu(c.field2)}</td>
                     <td className="py-2 px-3 text-center font-mono">{c.correlation}</td>
                     <td className="py-2 px-3 text-center">
                       <span className={`text-xs px-2 py-0.5 rounded ${c.strength === 'strong' ? 'bg-red-100 text-red-700' : c.strength === 'moderate' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>
@@ -580,7 +626,7 @@ function OpportunityBadge({ level }: { level: string }) {
   }
   return (
     <span className={`text-xs font-bold px-2 py-1 rounded border ${cfg[level] || cfg.medium}`}>
-      {level === 'high' ? '🟢 HIGH' : level === 'medium' ? '🟡 MED' : '⚪ LOW'}
+      {level === 'high' ? '🟢 ВЫСОКИЙ' : level === 'medium' ? '🟡 СРЕДНИЙ' : '⚪ НИЗКИЙ'}
     </span>
   )
 }
