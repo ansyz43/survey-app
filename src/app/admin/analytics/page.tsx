@@ -191,12 +191,29 @@ export default function AnalyticsPage() {
       {/* Results */}
       {analysis && !loading && (
         <>
-          {/* Pipeline meta */}
-          <div className="flex gap-4 text-sm text-gray-500 flex-wrap">
-            <span>{analysis.stats?.metadata?.totalResponses || 0} ответов</span>
-            <span>{totalTokens.toLocaleString()} токенов</span>
-            <span>{(totalTime / 1000).toFixed(1)}с</span>
-            <span>{analysis.pipelineSteps?.length || 0} шагов</span>
+          {/* Pipeline meta + export buttons */}
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex gap-4 text-sm text-gray-500 flex-wrap">
+              <span>{analysis.stats?.metadata?.totalResponses || 0} ответов</span>
+              <span>{totalTokens.toLocaleString()} токенов</span>
+              <span>{(totalTime / 1000).toFixed(1)}с</span>
+              <span>{analysis.pipelineSteps?.length || 0} шагов</span>
+            </div>
+            <div className="flex gap-2">
+              <a
+                href={`/api/admin/analytics/export?id=${analysis.id}`}
+                className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-xs font-medium"
+              >
+                📥 Excel
+              </a>
+              <a
+                href={`/admin/analytics/report/${analysis.id}`}
+                target="_blank"
+                className="px-3 py-1.5 bg-gray-700 text-white rounded-lg hover:bg-gray-800 text-xs font-medium"
+              >
+                🖨 PDF
+              </a>
+            </div>
           </div>
 
           {/* Tabs */}
