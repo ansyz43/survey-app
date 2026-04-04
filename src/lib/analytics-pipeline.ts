@@ -17,41 +17,21 @@ import { prisma } from './db'
 import { questions } from './questions'
 import { computeKeyInsights, type CrossTabResult, type FrequencyRow, type CorrelationResult } from './stats'
 
-// ── Resilient OpenAI client with proxy fallback + retry ──────────
+// ── Resilient OpenAI client — always proxy, never direct ─────────
+// Сервер в России → прямой доступ к api.openai.com ВСЕГДА даёт 403.
+// Единственный путь — через Cloudflare Worker прокси.
 const API_KEY = process.env.OPENAI_API_KEY
 const PROXY_URL = process.env.OPENAI_BASE_URL
-const DIRECT_URL = 'https://api.openai.com/v1'
 const MODEL = process.env.OPENAI_MODEL || 'gpt-5.4'
-const MAX_RETRIES = 3
-const RETRY_DELAY_MS = 2000
+const MAX_RETRIES = 5
+const RETRY_DELAY_MS = 3000
 
-function makeClient(baseURL?: string): OpenAI {
-  return new OpenAI({ apiKey: API_KEY, baseURL: baseURL || undefined })
-}
-
-let proxyClient = PROXY_URL ? makeClient(PROXY_URL) : null
-const directClient = makeClient(DIRECT_URL)
-
-function getClient(): OpenAI {
-  return proxyClient || directClient
-}
-
-function isProxyError(err: unknown): boolean {
-  if (!(err instanceof Error)) return false
-  const msg = err.message.toLowerCase()
-  return (
-    msg.includes('country') ||
-    msg.includes('region') ||
-    msg.includes('territory') ||
-    msg.includes('403') ||
-    msg.includes('502') ||
-    msg.includes('503') ||
-    msg.includes('econnrefused') ||
-    msg.includes('enotfound') ||
-    msg.includes('timeout') ||
-    msg.includes('fetch failed')
-  )
-}
+const openai = new OpenAI({
+  apiKey: API_KEY,
+  baseURL: PROXY_URL || undefined,
+  timeout: 120_000,       // 2 минуты таймаут на запрос
+  maxRetries: 0,          // отключаем встроенные retry SDK — управляем сами
+})
 
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms))
@@ -59,7 +39,7 @@ function sleep(ms: number): Promise<void> {
 
 type ReasoningEffort = 'none' | 'low' | 'medium' | 'high'
 
-/** Вызов GPT с retry + автопереключение прокси → прямой */
+/** Вызов GPT с retry через прокси (5 попыток, экспоненциальный backoff) */
 async function callGPT(opts: {
   systemPrompt: string
   userContent: string
@@ -68,13 +48,10 @@ async function callGPT(opts: {
   let lastError: unknown
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const client = getClient()
-    const label = client === proxyClient ? 'proxy' : 'direct'
-
     try {
-      console.log(`[GPT] attempt ${attempt + 1}/${MAX_RETRIES} via ${label}`)
+      console.log(`[GPT] attempt ${attempt + 1}/${MAX_RETRIES} via proxy`)
 
-      const response = await client.responses.create({
+      const response = await openai.responses.create({
         model: MODEL,
         instructions: opts.systemPrompt,
         input: [{ role: 'user', content: opts.userContent + '\n\nRespond with valid JSON only.' }],
@@ -85,23 +62,17 @@ async function callGPT(opts: {
       const text = response.output_text || '{}'
       const tokens = response.usage?.total_tokens || 0
 
-      if (!proxyClient && PROXY_URL && label === 'direct') {
-        proxyClient = makeClient(PROXY_URL)
-        console.log('[GPT] proxy client restored for next calls')
-      }
-
+      console.log(`[GPT] success on attempt ${attempt + 1}, tokens: ${tokens}`)
       return { content: text, tokens }
     } catch (err) {
       lastError = err
-      console.error(`[GPT] attempt ${attempt + 1} failed (${label}):`, err instanceof Error ? err.message : err)
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error(`[GPT] attempt ${attempt + 1} failed:`, msg)
 
-      if (isProxyError(err) && proxyClient && client === proxyClient) {
-        console.warn('[GPT] proxy error detected, switching to direct OpenAI')
-        proxyClient = null
-      }
-
+      // Если ошибка "unsupported country" — прокси не помог, но direct тоже не поможет.
+      // Ретраим — возможно CF Worker edge сменится на другую локацию.
       if (attempt < MAX_RETRIES - 1) {
-        const delay = RETRY_DELAY_MS * (attempt + 1)
+        const delay = RETRY_DELAY_MS * Math.pow(2, attempt) // 3s, 6s, 12s, 24s
         console.log(`[GPT] retrying in ${delay}ms...`)
         await sleep(delay)
       }
