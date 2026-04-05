@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { questions } from '@/lib/questions'
+import { auditLog } from '@/lib/audit'
 import * as XLSX from 'xlsx'
 
 function optionLabel(fieldName: string, optionId: string): string {
@@ -36,8 +37,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')
   const url = new URL(request.url)
   const format = url.searchParams.get('format') || 'csv'
+
+  await auditLog({ action: 'export', username: session.username, ip, details: `format=${format}` })
 
   const responses = await prisma.surveyResponse.findMany({
     orderBy: { createdAt: 'desc' },

@@ -6,6 +6,38 @@ const validFieldNames = new Set(questions.map((q) => q.fieldName))
 const arrayFields = new Set(
   questions.filter((q) => q.type === 'multiple' || q.type === 'ranking').map((q) => q.fieldName)
 )
+const openFields = new Set(
+  questions.filter((q) => q.type === 'open').map((q) => q.fieldName)
+)
+// Pre-build valid option IDs per question
+const validOptions = new Map<string, Set<string>>()
+for (const q of questions) {
+  if (q.options && q.options.length > 0) {
+    validOptions.set(q.fieldName, new Set(q.options.map((o) => o.id)))
+  }
+}
+
+function validateAnswer(fieldName: string, answer: unknown): string | null {
+  // Open-text: accept any string within length limit
+  if (openFields.has(fieldName)) {
+    if (typeof answer !== 'string') return 'Answer must be a string'
+    if (answer.length > 500) return 'Answer too long'
+    return null
+  }
+
+  const opts = validOptions.get(fieldName)
+  if (!opts) return null // no options defined = skip validation
+
+  if (arrayFields.has(fieldName)) {
+    if (!Array.isArray(answer)) return 'Answer must be an array'
+    for (const v of answer) {
+      if (typeof v !== 'string' || !opts.has(v)) return `Invalid option: ${v}`
+    }
+  } else {
+    if (typeof answer !== 'string' || !opts.has(answer as string)) return `Invalid option: ${answer}`
+  }
+  return null
+}
 
 export async function PUT(request: Request) {
   try {
@@ -22,6 +54,12 @@ export async function PUT(request: Request) {
     }
 
     const fieldName = question.fieldName
+
+    // Validate answer values against allowed options
+    const validationError = validateAnswer(fieldName, answer)
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 })
+    }
 
     // Build update data
     const updateData: Record<string, unknown> = {}

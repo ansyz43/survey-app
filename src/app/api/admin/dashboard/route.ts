@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import type { Prisma } from '@prisma/client'
+
+type GroupByField = Prisma.SurveyResponseScalarFieldEnum
+
+async function groupByField(field: GroupByField) {
+  const rows = await prisma.surveyResponse.groupBy({
+    by: [field],
+    _count: { _all: true },
+    where: { completedAt: { not: null }, [field]: { not: null } },
+  })
+  const result: Record<string, number> = {}
+  for (const r of rows) {
+    const key = r[field] as string | null
+    if (key) result[key] = r._count._all
+  }
+  return result
+}
 
 export async function GET(request: NextRequest) {
   const session = await getSession()
@@ -8,52 +25,41 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const total = await prisma.surveyResponse.count()
-  const completed = await prisma.surveyResponse.count({ where: { completedAt: { not: null } } })
-  const suspicious = await prisma.surveyResponse.count({ where: { isSuspicious: true } })
-  const partial = await prisma.surveyResponse.count({ where: { isPartial: true } })
+  // Parallel count queries — fast SQL aggregation
+  const [total, completed, suspicious, partial, byAge, byGender, byOccupation, byPreferredPlatform, byBuyIntent, byMonthlySpend] = await Promise.all([
+    prisma.surveyResponse.count(),
+    prisma.surveyResponse.count({ where: { completedAt: { not: null } } }),
+    prisma.surveyResponse.count({ where: { isSuspicious: true } }),
+    prisma.surveyResponse.count({ where: { isPartial: true } }),
+    groupByField('age'),
+    groupByField('gender'),
+    groupByField('occupation'),
+    groupByField('preferredPlatform'),
+    groupByField('buyVlkProduct'),
+    groupByField('monthlySpend'),
+  ])
 
-  // Age distribution
-  const allResponses = await prisma.surveyResponse.findMany({
+  // Array fields need in-memory counting, but we select only those fields
+  const arrayData = await prisma.surveyResponse.findMany({
     where: { completedAt: { not: null } },
     select: {
-      age: true,
-      gender: true,
-      occupation: true,
-      paidContentTypes: true,
       platforms: true,
+      paidContentTypes: true,
       contentTopics: true,
-      preferredPlatform: true,
-      buyVlkProduct: true,
-      monthlySpend: true,
       dropOffQuestion: true,
       completionRate: true,
     },
   })
 
-  const byAge: Record<string, number> = {}
-  const byGender: Record<string, number> = {}
-  const byOccupation: Record<string, number> = {}
   const byPlatform: Record<string, number> = {}
   const byContentType: Record<string, number> = {}
   const byContentTopic: Record<string, number> = {}
-  const byPreferredPlatform: Record<string, number> = {}
-  const byBuyIntent: Record<string, number> = {}
-  const byMonthlySpend: Record<string, number> = {}
   const dropOffCounts: Record<string, number> = {}
 
-  for (const r of allResponses) {
-    if (r.age) byAge[r.age] = (byAge[r.age] || 0) + 1
-    if (r.gender) byGender[r.gender] = (byGender[r.gender] || 0) + 1
-    if (r.occupation) byOccupation[r.occupation] = (byOccupation[r.occupation] || 0) + 1
-    if (r.monthlySpend) byMonthlySpend[r.monthlySpend] = (byMonthlySpend[r.monthlySpend] || 0) + 1
-    if (r.preferredPlatform) byPreferredPlatform[r.preferredPlatform] = (byPreferredPlatform[r.preferredPlatform] || 0) + 1
-    if (r.buyVlkProduct) byBuyIntent[r.buyVlkProduct] = (byBuyIntent[r.buyVlkProduct] || 0) + 1
-
+  for (const r of arrayData) {
     for (const p of r.platforms) byPlatform[p] = (byPlatform[p] || 0) + 1
     for (const ct of r.paidContentTypes) byContentType[ct] = (byContentType[ct] || 0) + 1
     for (const t of r.contentTopics) byContentTopic[t] = (byContentTopic[t] || 0) + 1
-
     if (r.completionRate < 1 && r.dropOffQuestion) {
       dropOffCounts[r.dropOffQuestion] = (dropOffCounts[r.dropOffQuestion] || 0) + 1
     }

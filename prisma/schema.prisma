@@ -69,3 +69,15 @@ model AnalysisResult {
   totalResponses Int
   createdAt      DateTime @default(now())
 }
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String   // login, logout, export, analytics_run, analytics_export
+  username  String
+  ip        String?
+  details   String?
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
+}

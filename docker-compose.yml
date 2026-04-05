@@ -3,11 +3,11 @@ services:
     image: postgres:16-alpine
     container_name: survey_postgres
     environment:
-      POSTGRES_USER: survey
-      POSTGRES_PASSWORD: survey123
-      POSTGRES_DB: survey_db
+      POSTGRES_USER: ${POSTGRES_USER:-survey}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-survey_db}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 

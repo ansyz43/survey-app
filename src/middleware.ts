@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'fallback-secret')
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error('NEXTAUTH_SECRET environment variable is required')
+}
+const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET)
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

@@ -31,9 +31,11 @@ module.exports = {
   apps: [
     {
       name: 'survey-app',
-      script: 'npm',
+      script: 'node_modules/.bin/next',
       args: 'start',
       cwd: __dirname,
+      instances: 2,
+      exec_mode: 'cluster',
       env: envVars,
       max_restarts: 10,
       restart_delay: 5000,

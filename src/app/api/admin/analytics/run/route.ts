@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { runAnalysisPipeline } from '@/lib/analytics-pipeline'
+import { auditLog } from '@/lib/audit'
 
 export async function POST(request: NextRequest) {
   const session = await getSession()
@@ -8,8 +9,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')
+
   try {
     const body = await request.json().catch(() => ({}))
+    await auditLog({ action: 'analytics_run', username: session.username, ip })
     const result = await runAnalysisPipeline(body.prompt || undefined)
     return NextResponse.json(result)
   } catch (error) {

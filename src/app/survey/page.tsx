@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { questions } from '@/lib/questions'
 import QuestionCard from '@/components/survey/QuestionCard'
 import ProgressBar from '@/components/survey/ProgressBar'
@@ -19,6 +19,7 @@ export default function SurveyPage() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [lang, setLang] = useState<Lang>('zh')
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const sid = sessionStorage.getItem('surveySessionId')
@@ -50,8 +51,11 @@ export default function SurveyPage() {
     const qId = currentQuestion.id
     setAnswers((prev) => ({ ...prev, [qId]: answer }))
 
-    // Auto-save for single choice (immediate advance not needed, user clicks next)
-    saveAnswer(qId, answer)
+    // Debounced auto-save (500ms) — reduces server load
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => {
+      saveAnswer(qId, answer)
+    }, 500)
   }
 
   const canNext = () => {

@@ -2,7 +2,10 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import bcryptjs from 'bcryptjs'
 
-const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'fallback-secret')
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error('NEXTAUTH_SECRET environment variable is required')
+}
+const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET)
 
 export async function hashPassword(password: string): Promise<string> {
   return bcryptjs.hash(password, 12)
