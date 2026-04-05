@@ -109,6 +109,8 @@ export default function AnalyticsPage() {
   const [showPrompt, setShowPrompt] = useState(false)
   const [activeTab, setActiveTab] = useState<'summary' | 'personas' | 'matrix' | 'themes' | 'stats'>('summary')
 
+  const [currentStep, setCurrentStep] = useState(0)
+
   useEffect(() => {
     fetch('/api/admin/analytics/history')
       .then((res) => { if (res.status === 401) { window.location.href = '/admin'; return null } return res.json() })
@@ -116,19 +118,43 @@ export default function AnalyticsPage() {
   }, [])
 
   const runAnalysis = async () => {
-    setLoading(true); setError('')
+    setLoading(true); setError(''); setCurrentStep(0)
     try {
       const res = await fetch('/api/admin/analytics/run', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: customPrompt || undefined }),
       })
       const data = await res.json()
-      if (res.ok) {
-        setAnalysis(data); setActiveTab('summary')
-        const histRes = await fetch('/api/admin/analytics/history')
-        const histData = await histRes.json()
-        setHistory(histData)
-      } else { setError(data.error || 'Ошибка анализа') }
+      if (!res.ok) { setError(data.error || 'Ошибка анализа'); setLoading(false); return }
+
+      // Poll for completion
+      const jobId = data.jobId
+      const poll = async () => {
+        for (;;) {
+          await new Promise((r) => setTimeout(r, 3000))
+          try {
+            const sr = await fetch(`/api/admin/analytics/status/${jobId}`)
+            if (sr.status === 401) { window.location.href = '/admin'; return }
+            const st = await sr.json()
+            setCurrentStep(st.currentStep || 0)
+
+            if (st.status === 'completed') {
+              setAnalysis(st.result); setActiveTab('summary')
+              const histRes = await fetch('/api/admin/analytics/history')
+              const histData = await histRes.json()
+              setHistory(histData)
+              return
+            }
+            if (st.status === 'failed') {
+              setError(st.error || 'Ошибка анализа')
+              return
+            }
+          } catch {
+            // Network hiccup — keep polling
+          }
+        }
+      }
+      await poll()
     } catch { setError('Ошибка соединения') }
     finally { setLoading(false) }
   }
@@ -174,10 +200,18 @@ export default function AnalyticsPage() {
           <div className="space-y-3">
             {STEP_LABELS.map((label, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold bg-purple-100 text-purple-600">
-                  {i}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                  i < currentStep ? 'bg-green-100 text-green-600' :
+                  i === currentStep ? 'bg-purple-100 text-purple-600 animate-pulse' :
+                  'bg-gray-100 text-gray-400'
+                }`}>
+                  {i < currentStep ? '✓' : i}
                 </div>
-                <span className="text-sm text-gray-600">{label}</span>
+                <span className={`text-sm ${
+                  i < currentStep ? 'text-green-600' :
+                  i === currentStep ? 'text-purple-700 font-medium' :
+                  'text-gray-400'
+                }`}>{label}</span>
               </div>
             ))}
           </div>

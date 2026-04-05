@@ -64,9 +64,12 @@ model Admin {
 model AnalysisResult {
   id             String   @id @default(uuid())
   prompt         String
-  result         String
+  result         String   @default("{}")
   model          String
-  totalResponses Int
+  totalResponses Int      @default(0)
+  status         String   @default("pending") // pending | running | completed | failed
+  error          String?
+  currentStep    Int      @default(0)
   createdAt      DateTime @default(now())
 }
 

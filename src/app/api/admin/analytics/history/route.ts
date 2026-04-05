@@ -9,6 +9,7 @@ export async function GET() {
   }
 
   const analyses = await prisma.analysisResult.findMany({
+    where: { status: 'completed' },
     orderBy: { createdAt: 'desc' },
     take: 20,
   })

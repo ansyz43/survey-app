@@ -154,118 +154,153 @@ export interface PipelineResult {
   pipelineSteps: Array<{ step: number; name: string; tokens: number; duration_ms: number }>
 }
 
-// ── Step progress callback ───────────────────────────────────────
-type ProgressCallback = (step: number, name: string) => void
+// ── Async job launcher ───────────────────────────────────────────
+// Creates a DB record immediately, runs pipeline in background,
+// updates DB on progress/completion/failure.
 
-// ── Main Pipeline ────────────────────────────────────────────────
-export async function runAnalysisPipeline(
-  customPrompt?: string,
-  onProgress?: ProgressCallback
-): Promise<PipelineResult & { id: string }> {
-
-  const responses = await prisma.surveyResponse.findMany({
+/** Start pipeline asynchronously. Returns jobId immediately. */
+export async function startAnalysisPipeline(customPrompt?: string): Promise<string> {
+  const count = await prisma.surveyResponse.count({
     where: { isPartial: false, isSuspicious: false },
   })
+  if (count === 0) throw new Error('Нет валидных ответов для анализа')
 
-  if (responses.length === 0) {
-    throw new Error('Нет валидных ответов для анализа')
-  }
-
-  const raw = responses as unknown as Record<string, unknown>[]
-  const pipelineSteps: PipelineResult['pipelineSteps'] = []
-
-  // ═══════════════ STEP 0: Server-side Stats ═══════════════
-  onProgress?.(0, 'Вычисляю статистику...')
-  const t0 = Date.now()
-  const insights = computeKeyInsights(raw)
-
-  // Filter to significant cross-tabs only
-  const significantCrossTabs = insights.crossTabs
-    .filter((ct) => ct.significant || ct.cramersV > 0.15)
-    .map((ct) => ({
-      pair: `${ct.rowField} × ${ct.colField}`,
-      cramersV: ct.cramersV,
-      pValue: ct.pValue,
-      insight: summarizeCrossTab(ct),
-    }))
-
-  pipelineSteps.push({ step: 0, name: 'Statistics', tokens: 0, duration_ms: Date.now() - t0 })
-
-  // Collect open text
-  const openProducts = responses
-    .map((r) => r.openProduct)
-    .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
-  const openCities = responses
-    .map((r) => r.openCity)
-    .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
-
-  // ═══════════════ STEP 1: Classify Open Text ═══════════════
-  onProgress?.(1, 'Классифицирую открытые ответы...')
-  const step1 = await runStep1_ClassifyText(openProducts, openCities)
-  pipelineSteps.push(step1.meta)
-
-  // ═══════════════ STEP 2: Build Personas ═══════════════
-  onProgress?.(2, 'Строю портреты аудитории...')
-  const step2 = await runStep2_BuildPersonas(
-    insights.frequencyTables,
-    significantCrossTabs,
-    insights.correlations,
-    responses.length
-  )
-  pipelineSteps.push(step2.meta)
-
-  // ═══════════════ STEP 3: Demand Matrix ═══════════════
-  onProgress?.(3, 'Анализирую спрос и готовность платить...')
-  const step3 = await runStep3_DemandMatrix(
-    insights.frequencyTables,
-    significantCrossTabs,
-    step2.personas,
-    responses.length,
-    customPrompt
-  )
-  pipelineSteps.push(step3.meta)
-
-  // ═══════════════ STEP 4: Recommendations ═══════════════
-  onProgress?.(4, 'Генерирую рекомендации...')
-  const step4 = await runStep4_Recommendations(
-    step2.personas,
-    step3.demandMatrix,
-    step1.themes,
-    significantCrossTabs,
-    insights.correlations,
-    responses.length,
-    customPrompt
-  )
-  pipelineSteps.push(step4.meta)
-
-  // ═══════════════ Assemble Result ═══════════════
-  const result: PipelineResult = {
-    stats: {
-      metadata: insights.metadata,
-      frequencyTables: insights.frequencyTables,
-      significantCrossTabs,
-      correlations: insights.correlations,
-    },
-    openTextThemes: step1.themes,
-    personas: step2.personas,
-    demandMatrix: step3.demandMatrix,
-    recommendations: step4.recommendations,
-    risks: step4.risks,
-    executiveSummary: step4.executiveSummary,
-    pipelineSteps,
-  }
-
-  // Save
-  const saved = await prisma.analysisResult.create({
+  const job = await prisma.analysisResult.create({
     data: {
       prompt: customPrompt || 'pipeline-v2',
-      result: JSON.stringify(result),
       model: MODEL,
-      totalResponses: responses.length,
+      totalResponses: count,
+      status: 'running',
+      currentStep: 0,
     },
   })
 
-  return { id: saved.id, ...result }
+  // Fire-and-forget — do NOT await
+  runPipelineInBackground(job.id, customPrompt).catch((err) => {
+    console.error('[Pipeline] unhandled:', err)
+  })
+
+  return job.id
+}
+
+/** Get current job status from DB (works across cluster instances). */
+export async function getJobStatus(jobId: string) {
+  return prisma.analysisResult.findUnique({
+    where: { id: jobId },
+    select: { id: true, status: true, currentStep: true, error: true, result: true, totalResponses: true },
+  })
+}
+
+async function updateStep(jobId: string, step: number) {
+  await prisma.analysisResult.update({ where: { id: jobId }, data: { currentStep: step } })
+}
+
+async function runPipelineInBackground(jobId: string, customPrompt?: string) {
+  try {
+    const responses = await prisma.surveyResponse.findMany({
+      where: { isPartial: false, isSuspicious: false },
+    })
+
+    const raw = responses as unknown as Record<string, unknown>[]
+    const pipelineSteps: PipelineResult['pipelineSteps'] = []
+
+    // ═══════════════ STEP 0: Server-side Stats ═══════════════
+    await updateStep(jobId, 0)
+    const t0 = Date.now()
+    const insights = computeKeyInsights(raw)
+
+    const significantCrossTabs = insights.crossTabs
+      .filter((ct) => ct.significant || ct.cramersV > 0.15)
+      .map((ct) => ({
+        pair: `${ct.rowField} × ${ct.colField}`,
+        cramersV: ct.cramersV,
+        pValue: ct.pValue,
+        insight: summarizeCrossTab(ct),
+      }))
+
+    pipelineSteps.push({ step: 0, name: 'Statistics', tokens: 0, duration_ms: Date.now() - t0 })
+
+    const openProducts = responses
+      .map((r) => r.openProduct)
+      .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+    const openCities = responses
+      .map((r) => r.openCity)
+      .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+
+    // ═══════════════ STEP 1: Classify Open Text ═══════════════
+    await updateStep(jobId, 1)
+    const step1 = await runStep1_ClassifyText(openProducts, openCities)
+    pipelineSteps.push(step1.meta)
+
+    // ═══════════════ STEP 2: Build Personas ═══════════════
+    await updateStep(jobId, 2)
+    const step2 = await runStep2_BuildPersonas(
+      insights.frequencyTables,
+      significantCrossTabs,
+      insights.correlations,
+      responses.length
+    )
+    pipelineSteps.push(step2.meta)
+
+    // ═══════════════ STEP 3: Demand Matrix ═══════════════
+    await updateStep(jobId, 3)
+    const step3 = await runStep3_DemandMatrix(
+      insights.frequencyTables,
+      significantCrossTabs,
+      step2.personas,
+      responses.length,
+      customPrompt
+    )
+    pipelineSteps.push(step3.meta)
+
+    // ═══════════════ STEP 4: Recommendations ═══════════════
+    await updateStep(jobId, 4)
+    const step4 = await runStep4_Recommendations(
+      step2.personas,
+      step3.demandMatrix,
+      step1.themes,
+      significantCrossTabs,
+      insights.correlations,
+      responses.length,
+      customPrompt
+    )
+    pipelineSteps.push(step4.meta)
+
+    // ═══════════════ Assemble & save ═══════════════
+    const result: PipelineResult = {
+      stats: {
+        metadata: insights.metadata,
+        frequencyTables: insights.frequencyTables,
+        significantCrossTabs,
+        correlations: insights.correlations,
+      },
+      openTextThemes: step1.themes,
+      personas: step2.personas,
+      demandMatrix: step3.demandMatrix,
+      recommendations: step4.recommendations,
+      risks: step4.risks,
+      executiveSummary: step4.executiveSummary,
+      pipelineSteps,
+    }
+
+    await prisma.analysisResult.update({
+      where: { id: jobId },
+      data: {
+        result: JSON.stringify(result),
+        totalResponses: responses.length,
+        status: 'completed',
+        currentStep: 5,
+      },
+    })
+    console.log(`[Pipeline] job ${jobId} completed`)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error(`[Pipeline] job ${jobId} failed:`, msg)
+    await prisma.analysisResult.update({
+      where: { id: jobId },
+      data: { status: 'failed', error: msg },
+    }).catch(() => {})
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════
