@@ -1,6 +1,12 @@
 export type QuestionType = 'single' | 'multiple' | 'ranking' | 'open'
 export type Lang = 'zh' | 'ru'
 
+export interface SkipRule {
+  field: string        // fieldName of the question to check
+  equals?: string      // skip if answer === equals
+  includes?: string    // skip if answer array includes this value
+}
+
 export interface QuestionOption {
   id: string
   zh: string
@@ -18,6 +24,7 @@ export interface Question {
   maxLength?: number
   rankTop?: number
   fieldName: string
+  skipIf?: SkipRule     // skip this question if condition met
 }
 
 export interface SurveyAnswers {

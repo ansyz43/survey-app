@@ -5,6 +5,9 @@ import bcryptjs from 'bcryptjs'
 if (!process.env.NEXTAUTH_SECRET) {
   throw new Error('NEXTAUTH_SECRET environment variable is required')
 }
+if (process.env.NEXTAUTH_SECRET.length < 20) {
+  throw new Error('NEXTAUTH_SECRET must be at least 20 characters')
+}
 const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET)
 
 export async function hashPassword(password: string): Promise<string> {

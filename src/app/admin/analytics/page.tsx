@@ -241,11 +241,10 @@ export default function AnalyticsPage() {
                 📥 Excel
               </a>
               <a
-                href={`/admin/analytics/report/${analysis.id}`}
-                target="_blank"
-                className="px-3 py-1.5 bg-gray-700 text-white rounded-lg hover:bg-gray-800 text-xs font-medium"
+                href={`/api/admin/analytics/pdf?id=${analysis.id}`}
+                className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-xs font-medium"
               >
-                🖨 PDF
+                📄 PDF
               </a>
             </div>
           </div>

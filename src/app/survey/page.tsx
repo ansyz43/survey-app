@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { questions } from '@/lib/questions'
 import QuestionCard from '@/components/survey/QuestionCard'
 import ProgressBar from '@/components/survey/ProgressBar'
-import type { Lang } from '@/types/survey'
+import type { Lang, SkipRule } from '@/types/survey'
 
 const UI = {
   zh: { prev: '← 上一题', next: '下一题 →', submit: '提交问卷 ✓', skip: '跳过', saving: '保存中...' },
@@ -21,7 +21,46 @@ export default function SurveyPage() {
   const [lang, setLang] = useState<Lang>('zh')
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Map fieldName → questionId for skip logic lookups
+  const fieldToQid = useRef(
+    Object.fromEntries(questions.map(q => [q.fieldName, q.id]))
+  ).current
+
+  /** Check if a question should be skipped based on current answers */
+  const shouldSkip = useCallback((rule: SkipRule | undefined): boolean => {
+    if (!rule) return false
+    const qid = fieldToQid[rule.field]
+    if (!qid) return false
+    const val = answers[qid]
+    if (rule.equals && val === rule.equals) return true
+    if (rule.includes && Array.isArray(val) && val.includes(rule.includes)) return true
+    return false
+  }, [answers, fieldToQid])
+
+  /** Find the next non-skipped index forward */
+  const nextValid = useCallback((from: number): number => {
+    for (let i = from + 1; i < questions.length; i++) {
+      if (!shouldSkip(questions[i].skipIf)) return i
+    }
+    return questions.length // past last = completion
+  }, [shouldSkip])
+
+  /** Find the previous non-skipped index backward */
+  const prevValid = useCallback((from: number): number => {
+    for (let i = from - 1; i >= 0; i--) {
+      if (!shouldSkip(questions[i].skipIf)) return i
+    }
+    return 0
+  }, [shouldSkip])
+
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false)
+
   useEffect(() => {
+    // Check if this browser already completed the survey
+    if (localStorage.getItem('surveyCompleted')) {
+      setAlreadyCompleted(true)
+      return
+    }
     const sid = sessionStorage.getItem('surveySessionId')
     if (!sid) { router.push('/'); return }
     setSessionId(sid)
@@ -71,8 +110,9 @@ export default function SurveyPage() {
   }
 
   const handleNext = async () => {
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1)
+    const next = nextValid(currentIndex)
+    if (next < questions.length) {
+      setCurrentIndex(next)
     } else {
       // Complete survey
       try {
@@ -81,6 +121,7 @@ export default function SurveyPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId }),
         })
+        localStorage.setItem('surveyCompleted', Date.now().toString())
       } catch (err) {
         console.error('Complete error:', err)
       }
@@ -89,8 +130,9 @@ export default function SurveyPage() {
   }
 
   const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
+    const prev = prevValid(currentIndex)
+    if (prev !== currentIndex) {
+      setCurrentIndex(prev)
     }
   }
 
@@ -100,17 +142,32 @@ export default function SurveyPage() {
     }
   }
 
+  if (alreadyCompleted) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <h2 className="text-2xl font-bold mb-4">
+            {lang === 'zh' ? '您已完成问卷' : 'Вы уже прошли опрос'}
+          </h2>
+          <p className="text-gray-500">
+            {lang === 'zh' ? '感谢您的参与！每人只能填写一次。' : 'Спасибо за участие! Опрос можно пройти только один раз.'}
+          </p>
+        </div>
+      </main>
+    )
+  }
+
   if (!sessionId || !currentQuestion) return null
 
-  const isLast = currentIndex === questions.length - 1
-  const isFirst = currentIndex === 0
+  const isLast = nextValid(currentIndex) >= questions.length
+  const isFirst = prevValid(currentIndex) === currentIndex
   const answer = answers[currentQuestion.id] ?? (
     currentQuestion.type === 'multiple' || currentQuestion.type === 'ranking' ? [] : ''
   )
 
   return (
     <main className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto">
-      <ProgressBar current={currentIndex + 1} total={questions.length} />
+      <ProgressBar current={currentIndex + 1} total={questions.length} skipped={questions.filter(q => shouldSkip(q.skipIf)).length} />
 
       <div className="flex-1 flex flex-col justify-center py-4">
         <QuestionCard

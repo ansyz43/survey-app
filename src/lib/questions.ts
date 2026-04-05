@@ -1,4 +1,4 @@
-import { Question } from '@/types/survey'
+import type { Question } from '@/types/survey'
 
 export const questions: Question[] = [
   // ===== BLOCK A — Demographics =====
@@ -71,6 +71,7 @@ export const questions: Question[] = [
     ru: 'Сколько тратите в месяц на цифровой контент?',
     type: 'single',
     fieldName: 'monthlySpend',
+    skipIf: { field: 'paidContentTypes', includes: 'never_pay' },
     options: [
       { id: '0', zh: '0元（不花钱）', ru: '0¥' },
       { id: '1-30', zh: '1–30元', ru: '1–30¥' },
@@ -212,6 +213,7 @@ export const questions: Question[] = [
     ru: 'Где покупаете зарубежные товары?',
     type: 'multiple',
     fieldName: 'purchaseChannels',
+    skipIf: { field: 'buyVlkProduct', equals: 'no' },
     options: [
       { id: 'poizon', zh: '得物 (Poizon)', ru: 'Poizon / Dewu' },
       { id: 'taobao', zh: '淘宝/天猫', ru: 'Taobao / Tmall' },
@@ -230,6 +232,7 @@ export const questions: Question[] = [
     ru: 'Сколько готовы заплатить за дизайнерский товар из Владивостока?',
     type: 'single',
     fieldName: 'priceWillingness',
+    skipIf: { field: 'buyVlkProduct', equals: 'no' },
     options: [
       { id: 'under50', zh: '50元以下', ru: 'Менее 50¥' },
       { id: '50-150', zh: '50–150元', ru: '50–150¥' },
@@ -245,6 +248,7 @@ export const questions: Question[] = [
     ru: 'Что важнее всего при покупке уникального товара? (ТОП-3)',
     type: 'ranking',
     fieldName: 'purchaseFactors',
+    skipIf: { field: 'buyVlkProduct', equals: 'no' },
     rankTop: 3,
     options: [
       { id: 'price', zh: '价格合理', ru: 'Адекватная цена' },

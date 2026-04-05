@@ -46,8 +46,16 @@ function autoWidth(rows: unknown[][]): Array<{ wch: number }> {
   return cols.map((w) => ({ wch: w + 2 }))
 }
 
+/** Escape formula injection: =, +, -, @, tab, CR at start of cell */
+function sanitizeCell(val: unknown): unknown {
+  if (typeof val !== 'string') return val
+  if (/^[=+\-@\t\r]/.test(val)) return "'" + val
+  return val
+}
+
 function addSheet(wb: XLSX.WorkBook, name: string, rows: unknown[][]) {
-  const ws = XLSX.utils.aoa_to_sheet(rows)
+  const safe = rows.map(row => row.map(sanitizeCell))
+  const ws = XLSX.utils.aoa_to_sheet(safe)
   ws['!cols'] = autoWidth(rows)
   XLSX.utils.book_append_sheet(wb, ws, name)
 }

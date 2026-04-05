@@ -7,6 +7,10 @@ async function main() {
   const username = process.env.ADMIN_USERNAME || 'admin'
   const password = process.env.ADMIN_PASSWORD || 'admin123'
 
+  if (password === 'admin123' || password.length < 8) {
+    console.warn('⚠️  WARNING: Using weak default password! Set ADMIN_PASSWORD in .env for production.')
+  }
+
   const existing = await prisma.admin.findUnique({ where: { username } })
   if (existing) {
     console.log(`Admin "${username}" already exists`)

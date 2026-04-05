@@ -20,6 +20,13 @@ function fmtDate(d: Date | null | undefined): string {
   return `${dd}.${mm}.${yy} ${hh}:${mi}`
 }
 
+/** Escape formula injection: =, +, -, @, tab, CR at start of cell */
+function sanitizeCell(val: unknown): unknown {
+  if (typeof val !== 'string') return val
+  if (/^[=+\-@\t\r]/.test(val)) return "'" + val
+  return val
+}
+
 function autoWidth(rows: unknown[][]): Array<{ wch: number }> {
   const cols: number[] = []
   for (const row of rows) {
@@ -76,7 +83,7 @@ export async function GET(request: NextRequest) {
     ]
   })
 
-  const allRows = [headers, ...rows]
+  const allRows = [headers, ...rows.map(row => row.map(sanitizeCell))]
 
   if (format === 'xlsx') {
     const wb = XLSX.utils.book_new()

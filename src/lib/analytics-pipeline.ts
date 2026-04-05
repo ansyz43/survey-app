@@ -160,6 +160,15 @@ export interface PipelineResult {
 
 /** Start pipeline asynchronously. Returns jobId immediately. */
 export async function startAnalysisPipeline(customPrompt?: string): Promise<string> {
+  // Prevent duplicate runs
+  const running = await prisma.analysisResult.findFirst({
+    where: { status: 'running' },
+    select: { id: true, currentStep: true },
+  })
+  if (running) {
+    throw new Error(`Анализ уже запущен (шаг ${running.currentStep}/5). Дождитесь завершения.`)
+  }
+
   const count = await prisma.surveyResponse.count({
     where: { isPartial: false, isSuspicious: false },
   })
