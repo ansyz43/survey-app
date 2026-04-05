@@ -29,7 +29,7 @@ const RETRY_DELAY_MS = 3000
 const openai = new OpenAI({
   apiKey: API_KEY,
   baseURL: PROXY_URL || undefined,
-  timeout: 120_000,       // 2 минуты таймаут на запрос
+  timeout: 300_000,       // 5 минут таймаут на запрос (GPT-5.4 reasoning долгий)
   maxRetries: 0,          // отключаем встроенные retry SDK — управляем сами
 })
 
