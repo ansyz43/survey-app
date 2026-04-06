@@ -140,12 +140,12 @@ export const questions: Question[] = [
     ],
   },
 
-  // ===== BLOCK C — Vladivostok Attitude =====
+  // ===== BLOCK C — Russian Far East Creative Industries Attitude =====
   {
     id: 'C1',
     block: 'C',
-    zh: '您是否接触过来自海参崴（符拉迪沃斯托克）的创意内容？',
-    ru: 'Знакомы ли вы с контентом из Владивостока?',
+    zh: '您是否接触过来自俄罗斯远东地区的创意内容？',
+    ru: 'Знакомы ли вы с креативным контентом с Дальнего Востока России?',
     type: 'single',
     fieldName: 'vlkContentAware',
     options: [
@@ -157,8 +157,8 @@ export const questions: Question[] = [
   {
     id: 'C2',
     block: 'C',
-    zh: '您希望看到来自俄罗斯/海参崴的什么内容？（最多选3个）',
-    ru: 'Какой контент из Владивостока хотели бы видеть?',
+    zh: '您希望看到来自俄罗斯远东地区的什么创意内容？（最多选3个）',
+    ru: 'Какой креативный контент с Дальнего Востока России хотели бы видеть?',
     type: 'multiple',
     fieldName: 'desiredContent',
     maxChoices: 3,
@@ -192,8 +192,8 @@ export const questions: Question[] = [
   {
     id: 'C4',
     block: 'C',
-    zh: '您是否愿意购买以海参崴为灵感的原创设计商品？（如T恤、明信片、海报、手机壳）',
-    ru: 'Купили бы товар с дизайном Владивостока?',
+    zh: '您是否愿意购买以俄罗斯远东为灵感的原创设计商品？（如T恤、明信片、海报、手机壳）',
+    ru: 'Купили бы товар с дизайном Дальнего Востока России?',
     type: 'single',
     fieldName: 'buyVlkProduct',
     options: [
@@ -228,8 +228,8 @@ export const questions: Question[] = [
   {
     id: 'D2',
     block: 'D',
-    zh: '您愿意为一件来自海参崴的原创设计商品（服饰/配饰/艺术品）花多少钱？',
-    ru: 'Сколько готовы заплатить за дизайнерский товар из Владивостока?',
+    zh: '您愿意为一件来自俄罗斯远东的原创设计商品（服饰/配饰/艺术品）花多少钱？',
+    ru: 'Сколько готовы заплатить за дизайнерский товар с Дальнего Востока России?',
     type: 'single',
     fieldName: 'priceWillingness',
     skipIf: { field: 'buyVlkProduct', equals: 'no' },
@@ -265,8 +265,8 @@ export const questions: Question[] = [
   {
     id: 'E1',
     block: 'E',
-    zh: '您最希望在中国市场上看到来自海参崴/俄罗斯的什么产品或内容？（请简短描述）',
-    ru: 'Какой продукт или контент из Владивостока хотели бы видеть?',
+    zh: '您最希望在中国市场上看到来自俄罗斯远东地区的什么创意产品或内容？（请简短描述）',
+    ru: 'Какой продукт или контент креативных индустрий Дальнего Востока России хотели бы видеть?',
     type: 'open',
     fieldName: 'openProduct',
     maxLength: 200,
@@ -285,7 +285,7 @@ export const questions: Question[] = [
 export const blockNames: Record<string, { zh: string; ru: string }> = {
   A: { zh: '基本信息', ru: 'Демография' },
   B: { zh: '内容消费习惯', ru: 'Потребление контента' },
-  C: { zh: '对海参崴/俄罗斯内容的态度', ru: 'Отношение к Владивостоку' },
+  C: { zh: '对俄罗斯远东创意内容的态度', ru: 'Отношение к креативным индустриям Дальнего Востока' },
   D: { zh: '购买行为', ru: 'Покупательское поведение' },
   E: { zh: '开放式问题', ru: 'Открытые вопросы' },
 }

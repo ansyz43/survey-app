@@ -12,10 +12,10 @@ const FIELD_RU: Record<string, string> = {
   platforms: 'Платформы',
   contentTopics: 'Интересные темы',
   appealFactors: 'Факторы привлекательности',
-  vlkContentAware: 'Знакомство с VLK-контентом',
-  desiredContent: 'Желаемый контент из VLK',
+  vlkContentAware: 'Знакомство с креативным контентом ДВ',
+  desiredContent: 'Желаемый контент из ДВ',
   preferredPlatform: 'Предпочтительная платформа',
-  buyVlkProduct: 'Готовность купить товар VLK',
+  buyVlkProduct: 'Готовность купить товар ДВ',
   purchaseChannels: 'Каналы покупок',
   priceWillingness: 'Готовность платить',
   purchaseFactors: 'Факторы покупки',
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
   if (data.personas?.length) {
     const pRows: unknown[][] = [
       ['Имя', 'Описание', 'Доля %', 'Возраст', 'Пол', 'Деятельность',
-       'Предпочтения контента', 'Платформы', 'Расходы', 'Отношение к VLK', 'Мотиваторы'],
+       'Предпочтения контента', 'Платформы', 'Расходы', 'Отношение к ДВ', 'Мотиваторы'],
     ]
     for (const p of data.personas) {
       pRows.push([

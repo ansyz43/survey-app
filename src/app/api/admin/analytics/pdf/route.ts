@@ -7,9 +7,9 @@ const FIELD_RU: Record<string, string> = {
   age: 'Возраст', gender: 'Пол', occupation: 'Род деятельности',
   paidContentTypes: 'Тип платного контента', monthlySpend: 'Расходы на контент/мес',
   platforms: 'Платформы', contentTopics: 'Интересные темы',
-  appealFactors: 'Факторы привлекательности', vlkContentAware: 'Знакомство с VLK-контентом',
-  desiredContent: 'Желаемый контент из VLK', preferredPlatform: 'Предпочтительная платформа',
-  buyVlkProduct: 'Готовность купить товар VLK', purchaseChannels: 'Каналы покупок',
+  appealFactors: 'Факторы привлекательности', vlkContentAware: 'Знакомство с креативным контентом ДВ',
+  desiredContent: 'Желаемый контент из ДВ', preferredPlatform: 'Предпочтительная платформа',
+  buyVlkProduct: 'Готовность купить товар ДВ', purchaseChannels: 'Каналы покупок',
   priceWillingness: 'Готовность платить', purchaseFactors: 'Факторы покупки',
 }
 

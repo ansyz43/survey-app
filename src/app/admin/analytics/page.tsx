@@ -64,10 +64,10 @@ const FIELD_RU: Record<string, string> = {
   platforms: 'Платформы',
   contentTopics: 'Интересные темы',
   appealFactors: 'Факторы привлекательности',
-  vlkContentAware: 'Знакомство с VLK-контентом',
-  desiredContent: 'Желаемый контент из VLK',
+  vlkContentAware: 'Знакомство с креативным контентом ДВ',
+  desiredContent: 'Желаемый контент из ДВ',
   preferredPlatform: 'Предпочтительная платформа',
-  buyVlkProduct: 'Готовность купить товар VLK',
+  buyVlkProduct: 'Готовность купить товар ДВ',
   purchaseChannels: 'Каналы покупок',
   priceWillingness: 'Готовность платить',
   purchaseFactors: 'Факторы покупки',
@@ -510,7 +510,7 @@ function ThemesTab({ themes }: { themes: AnalysisData['openTextThemes'] }) {
       {themes?.product_themes?.length > 0 && (
         <div>
           <h2 className="font-bold text-lg mb-3">💬 Темы из открытых ответов (E1)</h2>
-          <p className="text-sm text-gray-500 mb-3">&quot;Какой продукт/контент из Владивостока хотели бы видеть?&quot;</p>
+          <p className="text-sm text-gray-500 mb-3">&quot;Какой продукт/контент креативных индустрий Дальнего Востока России хотели бы видеть?&quot;</p>
           <div className="space-y-3">
             {themes.product_themes.map((t, i) => (
               <div key={i} className="bg-white border rounded-xl p-4">

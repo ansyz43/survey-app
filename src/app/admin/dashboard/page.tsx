@@ -112,7 +112,7 @@ export default function DashboardPage() {
           <PieChartWidget data={toChartData(data.byPreferredPlatform, 'C3')} />
         </ChartCard>
 
-        <ChartCard title="Готовность купить товар Владивостока (C4)">
+        <ChartCard title="Готовность купить товар Дальнего Востока (C4)">
           <BarChartWidget data={toChartData(data.byBuyIntent, 'C4')} />
         </ChartCard>
 
