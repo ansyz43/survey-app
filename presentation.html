@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Аналитическая платформа — продуктовая презентация</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+
+  :root {
+    --r-background-color: #0a0a1a;
+    --r-main-font: 'Inter', sans-serif;
+    --r-heading-font: 'Inter', sans-serif;
+    --r-main-color: #e0e0e0;
+    --r-heading-color: #ffffff;
+    --accent: #6c63ff;
+    --accent2: #00d4aa;
+    --accent3: #ff6b6b;
+    --accent4: #ffd93d;
+  }
+
+  .reveal {
+    font-family: var(--r-main-font);
+    font-size: 28px;
+  }
+
+  .reveal h1 {
+    font-size: 2.2em;
+    font-weight: 900;
+    line-height: 1.15;
+    text-transform: none;
+    background: linear-gradient(135deg, #6c63ff, #00d4aa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .reveal h2 {
+    font-size: 1.6em;
+    font-weight: 700;
+    text-transform: none;
+    color: #fff;
+    margin-bottom: 0.6em;
+  }
+
+  .reveal h3 {
+    font-size: 1.2em;
+    font-weight: 600;
+    text-transform: none;
+    color: var(--accent2);
+  }
+
+  .reveal p, .reveal li {
+    font-weight: 300;
+    line-height: 1.6;
+    font-size: 0.85em;
+  }
+
+  .reveal .slide-number {
+    font-size: 14px;
+    color: #666;
+  }
+
+  /* Title slide */
+  .title-slide h1 {
+    font-size: 2.8em;
+    margin-bottom: 0.3em;
+  }
+  .title-slide .subtitle {
+    font-size: 1.1em;
+    color: #888;
+    font-weight: 300;
+  }
+  .title-slide .divider {
+    width: 120px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    margin: 30px auto;
+    border-radius: 2px;
+  }
+
+  /* Accent boxes */
+  .accent-box {
+    background: rgba(108, 99, 255, 0.1);
+    border-left: 4px solid var(--accent);
+    padding: 20px 28px;
+    border-radius: 0 12px 12px 0;
+    margin: 20px 0;
+    text-align: left;
+  }
+
+  .accent-box.green {
+    background: rgba(0, 212, 170, 0.08);
+    border-left-color: var(--accent2);
+  }
+
+  .accent-box.red {
+    background: rgba(255, 107, 107, 0.08);
+    border-left-color: var(--accent3);
+  }
+
+  .accent-box.yellow {
+    background: rgba(255, 217, 61, 0.08);
+    border-left-color: var(--accent4);
+  }
+
+  /* Comparison grid */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin: 30px 0;
+  }
+
+  .compare-card {
+    background: rgba(255,255,255,0.04);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: left;
+  }
+
+  .compare-card.bad {
+    border: 1px solid rgba(255,107,107,0.3);
+  }
+
+  .compare-card.good {
+    border: 1px solid rgba(0,212,170,0.3);
+  }
+
+  .compare-card .label {
+    font-size: 0.65em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .compare-card.bad .label { color: var(--accent3); }
+  .compare-card.good .label { color: var(--accent2); }
+
+  /* Feature cards */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 20px 0;
+  }
+
+  .feature-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 22px;
+    text-align: left;
+    transition: transform 0.2s;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .feature-card .icon {
+    font-size: 1.8em;
+    margin-bottom: 10px;
+  }
+
+  .feature-card .title {
+    font-weight: 700;
+    color: #fff;
+    font-size: 0.85em;
+    margin-bottom: 6px;
+  }
+
+  .feature-card .desc {
+    font-size: 0.7em;
+    color: #999;
+    line-height: 1.5;
+  }
+
+  /* Pipeline visual */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+  }
+
+  .pipeline-step {
+    background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(0,212,170,0.1));
+    border: 1px solid rgba(108,99,255,0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
+    text-align: center;
+    min-width: 140px;
+  }
+
+  .pipeline-step .step-num {
+    font-size: 0.6em;
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .pipeline-step .step-name {
+    font-size: 0.75em;
+    font-weight: 600;
+    color: #fff;
+    margin-top: 4px;
+  }
+
+  .pipeline-arrow {
+    color: var(--accent);
+    font-size: 1.2em;
+    font-weight: 300;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 30px 0;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-item .number {
+    font-size: 2.4em;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .stat-item .label {
+    font-size: 0.65em;
+    color: #888;
+    margin-top: 6px;
+    font-weight: 400;
+  }
+
+  /* Table styling */
+  .reveal table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    margin: 20px 0;
+    font-size: 0.75em;
+  }
+
+  .reveal table th {
+    background: rgba(108,99,255,0.15);
+    color: var(--accent);
+    font-weight: 600;
+    padding: 12px 16px;
+    text-align: left;
+    border: none;
+  }
+
+  .reveal table th:first-child { border-radius: 10px 0 0 0; }
+  .reveal table th:last-child { border-radius: 0 10px 0 0; }
+
+  .reveal table td {
+    padding: 10px 16px;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    text-align: left;
+  }
+
+  .reveal table tr:last-child td:first-child { border-radius: 0 0 0 10px; }
+  .reveal table tr:last-child td:last-child { border-radius: 0 0 10px 0; }
+
+  .reveal table tr:nth-child(even) td {
+    background: rgba(255,255,255,0.02);
+  }
+
+  /* Highlight text */
+  .highlight {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .highlight-green {
+    color: var(--accent2);
+    font-weight: 600;
+  }
+
+  .highlight-red {
+    color: var(--accent3);
+    font-weight: 600;
+  }
+
+  .highlight-yellow {
+    color: var(--accent4);
+    font-weight: 600;
+  }
+
+  /* Bullet list override */
+  .reveal ul {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .reveal ul li {
+    position: relative;
+    padding-left: 24px;
+    margin-bottom: 10px;
+  }
+
+  .reveal ul li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Section divider */
+  .section-slide {
+    text-align: center;
+  }
+
+  .section-slide h2 {
+    font-size: 2em;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .section-slide .section-num {
+    font-size: 0.7em;
+    color: #555;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* Shield icon list */
+  .shield-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 20px 0;
+  }
+
+  .shield-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.75em;
+  }
+
+  .shield-item .shield-icon {
+    font-size: 1.5em;
+    flex-shrink: 0;
+  }
+
+  /* CTA */
+  .cta-box {
+    background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(0,212,170,0.1));
+    border: 1px solid rgba(108,99,255,0.3);
+    border-radius: 20px;
+    padding: 40px;
+    margin: 30px auto;
+    max-width: 700px;
+  }
+
+  /* Persona cards */
+  .persona-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  .persona-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: left;
+  }
+
+  .persona-card .persona-emoji {
+    font-size: 2em;
+    margin-bottom: 8px;
+  }
+
+  .persona-card .persona-name {
+    font-weight: 700;
+    color: #fff;
+    font-size: 0.8em;
+    margin-bottom: 6px;
+  }
+
+  .persona-card .persona-desc {
+    font-size: 0.65em;
+    color: #999;
+    line-height: 1.4;
+  }
+
+  /* Matrix visual */
+  .matrix-box {
+    display: inline-block;
+    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
+    padding: 20px 30px;
+    margin: 8px;
+    text-align: center;
+  }
+
+  .matrix-box .val {
+    font-size: 1.8em;
+    font-weight: 900;
+  }
+
+  .matrix-box .val.high { color: var(--accent2); }
+  .matrix-box .val.mid { color: var(--accent4); }
+  .matrix-box .val.low { color: var(--accent3); }
+
+  .matrix-box .mlabel {
+    font-size: 0.6em;
+    color: #888;
+    margin-top: 4px;
+  }
+
+  /* Fade-in-then-semi-out for lists */
+  .reveal .slides section .fragment.semi-fade-out.visible {
+    opacity: 0.5;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .compare-grid, .feature-grid, .shield-list, .persona-grid {
+      grid-template-columns: 1fr;
+    }
+    .stats-row {
+      flex-wrap: wrap;
+    }
+    .pipeline {
+      flex-direction: column;
+    }
+    .pipeline-arrow {
+      transform: rotate(90deg);
+    }
+  }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ===================== SLIDE 1: TITLE ===================== -->
+<section class="title-slide" data-background-gradient="radial-gradient(ellipse at 30% 60%, rgba(108,99,255,0.12) 0%, transparent 60%), radial-gradient(ellipse at 70% 20%, rgba(0,212,170,0.08) 0%, transparent 50%)">
+  <h1>Аналитическая<br>платформа</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Исследование креативных индустрий<br>Дальнего Востока России</p>
+  <p style="color:#555; font-size:0.6em; margin-top:40px;">Навигация: ← → стрелки &nbsp;|&nbsp; Esc — обзор слайдов</p>
+</section>
+
+<!-- ===================== SLIDE 2: PROBLEM ===================== -->
+<section>
+  <h2>Проблема</h2>
+  <div class="compare-grid">
+    <div class="compare-card bad">
+      <div class="label">❌ Обычный подход</div>
+      <p>Собрал ответы → посмотрел круговые диаграммы → написал «60% хотят видео»</p>
+      <p style="color:#666; font-size:0.7em; margin-top:12px;">Это делает любой студент бесплатно в Google Forms</p>
+    </div>
+    <div class="compare-card good">
+      <div class="label">✅ Наш подход</div>
+      <p><strong>5-ступенчатый AI-пайплайн</strong>, где каждый шаг строится на результатах предыдущего</p>
+      <p style="color:#666; font-size:0.7em; margin-top:12px;">Команда из статистика, маркетолога и стратега — быстрее и дешевле</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SLIDE 3: PIPELINE OVERVIEW ===================== -->
+<section>
+  <h2>Архитектура пайплайна</h2>
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="step-num">Шаг 0</div>
+      <div class="step-name">Статистика</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step">
+      <div class="step-num">Шаг 1</div>
+      <div class="step-name">AI-темы</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step">
+      <div class="step-num">Шаг 2</div>
+      <div class="step-name">Персоны</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step">
+      <div class="step-num">Шаг 3</div>
+      <div class="step-name">Матрица</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step">
+      <div class="step-num">Шаг 4</div>
+      <div class="step-name">Стратегия</div>
+    </div>
+  </div>
+  <p style="text-align:center; color:#888; font-size:0.7em; margin-top:20px;">Каждый шаг получает результаты всех предыдущих → накопление контекста</p>
+</section>
+
+<!-- ===================== SECTION: ANALYTICS ===================== -->
+<section class="section-slide" data-background-gradient="radial-gradient(ellipse at center, rgba(108,99,255,0.08) 0%, transparent 70%)">
+  <div class="section-num">Часть 1</div>
+  <h2>Аналитика</h2>
+  <p style="color:#888; font-size:0.8em;">Как работает и почему она мощная</p>
+</section>
+
+<!-- ===================== SLIDE: STEP 0 ===================== -->
+<section>
+  <h2>Шаг 0 — Серверная статистика</h2>
+  <h3 style="margin-bottom:20px;">Без AI · Математические формулы</h3>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="icon">📊</div>
+      <div class="title">Распределения</div>
+      <div class="desc">Проценты по каждому вопросу — база для всего остального</div>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔗</div>
+      <div class="title">Кросс-табуляции</div>
+      <div class="desc">Связи МЕЖДУ ответами: «тратит много → готов покупать»</div>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔬</div>
+      <div class="title">Проверка значимости</div>
+      <div class="desc">p-value &lt; 0.05 — связь реальная, а не совпадение</div>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📐</div>
+      <div class="title">Сила связи</div>
+      <div class="desc">Показатель от 0 до 1 — слабая связь или зависимость</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SLIDE: STEP 0 VALUE ===================== -->
+<section>
+  <h2>Шаг 0 — Ценность для клиента</h2>
+  <div class="accent-box green">
+    <p style="font-size:0.9em;">Вы приходите к китайской компании не с <span class="highlight-red">«ну вот 60% чего-то хотят»</span>, а с <span class="highlight-green">математически доказанными фактами</span>:</p>
+    <p style="font-size:0.85em; margin-top:14px;"><em>«Между доходом и готовностью покупать — сильная связь. Вот цифры, вот доказательство, вероятность ошибки &lt;1%»</em></p>
+  </div>
+  <p style="color:#888; font-size:0.75em; text-align:center; margin-top:20px;">Это уровень маркетингового агентства, а не фрилансера</p>
+</section>
+
+<!-- ===================== SLIDE: STEP 1 ===================== -->
+<section>
+  <h2>Шаг 1 — AI-классификация</h2>
+  <h3 style="margin-bottom:20px;">Открытые ответы → бизнес-темы</h3>
+
+  <div class="compare-grid">
+    <div class="compare-card bad">
+      <div class="label">Без AI</div>
+      <p>Список из 3000+ ответов на китайском. Никакой структуры.</p>
+    </div>
+    <div class="compare-card good">
+      <div class="label">С нашим AI</div>
+      <p><strong>5–10 бизнес-тем</strong>, каждая = тип компании для холодных продаж</p>
+    </div>
+  </div>
+
+  <div class="accent-box" style="margin-top:20px;">
+    <p style="font-size:0.85em;">Студенты пишут <span class="highlight-red">«еда»</span> → AI интерпретирует как <span class="highlight-green">«аргумент для питча китайским фуд-брендам»</span></p>
+    <p style="font-size:0.7em; color:#888; margin-top:8px;">AI обучен думать как B2B-продажник, а не как блогер</p>
+  </div>
+</section>
+
+<!-- ===================== SLIDE: STEP 2 ===================== -->
+<section>
+  <h2>Шаг 2 — Покупательские персоны</h2>
+  <h3 style="margin-bottom:20px;">AI + реальные данные → 3–5 сегментов аудитории</h3>
+
+  <div class="persona-grid">
+    <div class="persona-card">
+      <div class="persona-emoji">🍜</div>
+      <div class="persona-name">Молодые гурманы</div>
+      <div class="persona-desc">28% аудитории · 100-300 ¥/мес · Билибили · Интересует еда и культура</div>
+    </div>
+    <div class="persona-card">
+      <div class="persona-emoji">🎮</div>
+      <div class="persona-name">Креативные потребители</div>
+      <div class="persona-desc">22% аудитории · 300+ ¥/мес · Douyin · Готовы покупать продукт ДВ</div>
+    </div>
+    <div class="persona-card">
+      <div class="persona-emoji">📚</div>
+      <div class="persona-name">Студенты-исследователи</div>
+      <div class="persona-desc">18% аудитории · &lt;100 ¥/мес · WeChat · Интересует образование</div>
+    </div>
+  </div>
+
+  <div class="accent-box green" style="margin-top:16px;">
+    <p style="font-size:0.8em;"><strong>Каждая персона содержит:</strong> демография, платформы, расходы, отношение к продуктам ДВ, мотиваторы, <span class="highlight-green">и какой тип компании-заказчика заинтересован</span></p>
+  </div>
+</section>
+
+<!-- ===================== SLIDE: STEP 3 ===================== -->
+<section>
+  <h2>Шаг 3 — Матрица спроса × WTP</h2>
+  <h3 style="margin-bottom:20px;">Где деньги? Data-driven приоритизация</h3>
+
+  <div style="text-align:center;">
+    <div class="matrix-box">
+      <div class="val high">9/10</div>
+      <div class="mlabel">Спрос: Фуд</div>
+    </div>
+    <div class="matrix-box">
+      <div class="val high">7/10</div>
+      <div class="mlabel">WTP: Фуд</div>
+    </div>
+    <div class="matrix-box">
+      <div class="val mid">6/10</div>
+      <div class="mlabel">Спрос: Туризм</div>
+    </div>
+    <div class="matrix-box">
+      <div class="val mid">5/10</div>
+      <div class="mlabel">WTP: Туризм</div>
+    </div>
+    <div class="matrix-box">
+      <div class="val low">3/10</div>
+      <div class="mlabel">Спрос: Промо</div>
+    </div>
+  </div>
+
+  <table style="margin-top:20px;">
+    <tr>
+      <th>Параметр</th>
+      <th>Что измеряет</th>
+    </tr>
+    <tr>
+      <td>Спрос (1–10)</td>
+      <td>Сколько людей хотят этот контент</td>
+    </tr>
+    <tr>
+      <td>WTP (1–10)</td>
+      <td>Готовность платить за продукт</td>
+    </tr>
+    <tr>
+      <td>Оценка возможности</td>
+      <td>Насколько реально это реализовать</td>
+    </tr>
+    <tr>
+      <td>Платформа</td>
+      <td>Где эффективнее всего разместить</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ===================== SLIDE: STEP 4 ===================== -->
+<section>
+  <h2>Шаг 4 — Стратегия и риски</h2>
+  <h3 style="margin-bottom:20px;">Готовый план действий, а не просто данные</h3>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="icon">🎯</div>
+      <div class="title">Рекомендации</div>
+      <div class="desc">Приоритет · Целевая персона · Ожидаемый эффект · Таймлайн · % уверенности</div>
+    </div>
+    <div class="feature-card">
+      <div class="icon">⚠️</div>
+      <div class="title">Риски</div>
+      <div class="desc">Вероятность · Уровень влияния · Стратегия митигации</div>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📋</div>
+      <div class="title">Executive Summary</div>
+      <div class="desc">Краткое резюме на 1 абзац — для руководства</div>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🗺️</div>
+      <div class="title">Дорожная карта</div>
+      <div class="desc">8 конкретных шагов с приоритетами и целевой аудиторией</div>
+    </div>
+  </div>
+
+  <div class="accent-box green" style="margin-top:16px;">
+    <p style="font-size:0.85em;">Это уровень <strong>стратегической консалтинговой услуги</strong> — не просто данные, а готовый план</p>
+  </div>
+</section>
+
+<!-- ===================== SLIDE: OUTPUT FORMATS ===================== -->
+<section>
+  <h2>Что получает клиент</h2>
+
+  <div class="feature-grid">
+    <div class="feature-card" style="border-color: rgba(108,99,255,0.2);">
+      <div class="icon">📊</div>
+      <div class="title">Интерактивный дашборд</div>
+      <div class="desc">Визуализация, фильтры, графики — всё в браузере в реальном времени</div>
+    </div>
+    <div class="feature-card" style="border-color: rgba(0,212,170,0.2);">
+      <div class="icon">📑</div>
+      <div class="title">Excel-отчёт (7&nbsp;листов)</div>
+      <div class="desc">Итоги · Рекомендации · Риски · Персоны · Матрица спроса · Темы · Статистика</div>
+    </div>
+    <div class="feature-card" style="border-color: rgba(255,217,61,0.2);">
+      <div class="icon">📄</div>
+      <div class="title">PDF-отчёт</div>
+      <div class="desc">Красивый документ для печати и отправки клиентам</div>
+    </div>
+    <div class="feature-card" style="border-color: rgba(255,107,107,0.2);">
+      <div class="icon">🗄️</div>
+      <div class="title">База данных</div>
+      <div class="desc">Все ответы хранятся — можно перезапускать анализ с новыми данными</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SLIDE: KEY NUMBERS — ANALYTICS ===================== -->
+<section>
+  <h2>Аналитика в цифрах</h2>
+  <div class="stats-row">
+    <div class="stat-item">
+      <div class="number">5</div>
+      <div class="label">ступеней пайплайна</div>
+    </div>
+    <div class="stat-item">
+      <div class="number">4</div>
+      <div class="label">AI-запроса</div>
+    </div>
+    <div class="stat-item">
+      <div class="number">3</div>
+      <div class="label">формата экспорта</div>
+    </div>
+    <div class="stat-item">
+      <div class="number">7</div>
+      <div class="label">листов в Excel</div>
+    </div>
+    <div class="stat-item">
+      <div class="number">~3</div>
+      <div class="label">минуты на анализ</div>
+    </div>
+  </div>
+
+  <div class="accent-box" style="text-align:center; margin-top:20px;">
+    <p style="font-size:0.85em;">Не «прогнали через ChatGPT» — а <strong>полноценный аналитический пайплайн</strong><br>с математической статистикой, заточенный под B2B-продажи</p>
+  </div>
+</section>
+
+<!-- ===================== SECTION: SECURITY ===================== -->
+<section class="section-slide" data-background-gradient="radial-gradient(ellipse at center, rgba(255,107,107,0.06) 0%, transparent 70%)">
+  <div class="section-num">Часть 2</div>
+  <h2>Безопасность</h2>
+  <p style="color:#888; font-size:0.8em;">10 уровней защиты корпоративного класса</p>
+</section>
+
+<!-- ===================== SLIDE: WHY SECURITY ===================== -->
+<section>
+  <h2>Почему безопасность — не «потом»</h2>
+
+  <div class="accent-box red">
+    <p style="font-size:0.9em;">Вы собираете <strong>персональные данные</strong> китайских студентов:</p>
+    <p style="font-size:0.85em;">возраст, пол, расходы, город, предпочтения</p>
+  </div>
+
+  <div class="compare-grid" style="margin-top:20px;">
+    <div class="compare-card bad">
+      <div class="label">🔓 Если данные утекут</div>
+      <p>Удар по репутации. Потеря доверия клиентов. Возможные юридические последствия.</p>
+    </div>
+    <div class="compare-card bad">
+      <div class="label">🔓 Если подменят данные</div>
+      <p>Аналитика бесполезна. Рекомендации неверные. Клиент тратит деньги впустую.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SLIDE: SECURITY OVERVIEW ===================== -->
+<section>
+  <h2>10 уровней защиты</h2>
+  <div class="shield-list">
+    <div class="shield-item"><span class="shield-icon">🛡️</span> Защита Excel от формул-инъекций</div>
+    <div class="shield-item"><span class="shield-icon">🔒</span> 6 заголовков безопасности</div>
+    <div class="shield-item"><span class="shield-icon">🚫</span> Блокировка подбора паролей</div>
+    <div class="shield-item"><span class="shield-icon">⏱️</span> Rate Limiting (3 зоны)</div>
+    <div class="shield-item"><span class="shield-icon">🔑</span> Проверка стойкости паролей</div>
+    <div class="shield-item"><span class="shield-icon">📝</span> Аудит-лог действий</div>
+    <div class="shield-item"><span class="shield-icon">🔄</span> Защита от дублей AI-анализа</div>
+    <div class="shield-item"><span class="shield-icon">👤</span> Защита от повторного опроса</div>
+    <div class="shield-item"><span class="shield-icon">📋</span> Санитизация всех экспортов</div>
+    <div class="shield-item"><span class="shield-icon">🖥️</span> Серверное усиление</div>
+  </div>
+</section>
+
+<!-- ===================== SLIDE: SECURITY — BRUTE FORCE + RATE LIMIT ===================== -->
+<section>
+  <h2>Защита доступа</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="icon">🚫</div>
+      <div class="title">Brute-Force Protection</div>
+      <div class="desc">5 неудачных попыток → блокировка IP на 15 минут. Каждая попытка в аудит-лог.</div>
+    </div>
+    <div class="feature-card">
+      <div class="icon">⏱️</div>
+      <div class="title">Rate Limiting (Nginx)</div>
+      <div class="desc">API: 10 req/s · Логин: 3/мин · Опрос: 5/sec — защита от ботов и DDoS</div>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔑</div>
+      <div class="title">Стойкость паролей</div>
+      <div class="desc">Секрет ≥ 20 символов. Слабые пароли → предупреждение. Дефолт заблокирован.</div>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📝</div>
+      <div class="title">Аудит-лог</div>
+      <div class="desc">Вход, IP, пользователь, дата — «чёрный ящик» системы для любых проверок</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SLIDE: SECURITY — HEADERS ===================== -->
+<section>
+  <h2>Заголовки безопасности</h2>
+  <table>
+    <tr>
+      <th>Заголовок</th>
+      <th>Защита</th>
+    </tr>
+    <tr>
+      <td><code>X-Frame-Options</code></td>
+      <td>Блокирует встраивание в чужой iframe → антифишинг</td>
+    </tr>
+    <tr>
+      <td><code>X-Content-Type-Options</code></td>
+      <td>Запрещает подмену типов файлов</td>
+    </tr>
+    <tr>
+      <td><code>X-XSS-Protection</code></td>
+      <td>Встроенная защита от XSS на максимум</td>
+    </tr>
+    <tr>
+      <td><code>Referrer-Policy</code></td>
+      <td>Контроль информации при переходах</td>
+    </tr>
+    <tr>
+      <td><code>Permissions-Policy</code></td>
+      <td>Блокирует камеру, микрофон, геолокацию</td>
+    </tr>
+    <tr>
+      <td><code>Content-Security-Policy</code></td>
+      <td>Скрипты только с вашего домена</td>
+    </tr>
+  </table>
+  <p style="text-align:center; color:#888; font-size:0.7em; margin-top:16px;">Уровень банковского приложения — проходит любой аудит безопасности</p>
+</section>
+
+<!-- ===================== SLIDE: SECURITY — DATA INTEGRITY ===================== -->
+<section>
+  <h2>Целостность данных</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="icon">🛡️</div>
+      <div class="title">CSV/Excel Injection</div>
+      <div class="desc">Все ячейки во всех экспортах проходят санитизацию. Формулы <code>=</code> <code>+</code> <code>-</code> <code>@</code> экранируются. Стандарт OWASP.</div>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔄</div>
+      <div class="title">Защита от дублей AI</div>
+      <div class="desc">Нельзя запустить анализ дважды — экономия $1–3 за запуск, защита от конфликтов</div>
+    </div>
+    <div class="feature-card">
+      <div class="icon">👤</div>
+      <div class="title">Деdup респондентов</div>
+      <div class="desc">Один студент = один ответ. Нет дублей → чистые данные → точная аналитика</div>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔒</div>
+      <div class="title">SSL / HTTPS</div>
+      <div class="desc">Let's Encrypt — все данные зашифрованы при передаче между браузером и сервером</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SLIDE: SERVER ===================== -->
+<section>
+  <h2>Серверная инфраструктура</h2>
+  <table>
+    <tr>
+      <th>Компонент</th>
+      <th>Назначение</th>
+    </tr>
+    <tr>
+      <td><strong>PM2 кластер</strong> (2 инстанса)</td>
+      <td>Один упал → второй продолжает работать</td>
+    </tr>
+    <tr>
+      <td><strong>Connection pool</strong> (20 соединений)</td>
+      <td>БД не захлебнётся от одновременных запросов</td>
+    </tr>
+    <tr>
+      <td><strong>Nginx reverse proxy</strong></td>
+      <td>Приложение не торчит наружу + rate limiting</td>
+    </tr>
+    <tr>
+      <td><strong>2 ГБ swap</strong></td>
+      <td>Если RAM закончится — сервер не упадёт</td>
+    </tr>
+    <tr>
+      <td><strong>SSL/TLS</strong> (Let's Encrypt)</td>
+      <td>Все данные зашифрованы при передаче</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ===================== SLIDE: SUMMARY TABLE ===================== -->
+<section>
+  <h2>Итого: что получает клиент</h2>
+  <table>
+    <tr>
+      <th>Категория</th>
+      <th>Ценность</th>
+    </tr>
+    <tr>
+      <td><span class="highlight">Аналитика</span></td>
+      <td>5-ступенчатый AI-пайплайн + математическая статистика + персоны + матрица спроса + план действий</td>
+    </tr>
+    <tr>
+      <td><span class="highlight-green">Безопасность</span></td>
+      <td>10 уровней защиты корпоративного класса — от подбора паролей до экранирования формул</td>
+    </tr>
+    <tr>
+      <td><span class="highlight-yellow">Отчётность</span></td>
+      <td>Дашборд + Excel (7 листов) + PDF — в любом формате для любой аудитории</td>
+    </tr>
+    <tr>
+      <td><span class="highlight">Повторяемость</span></td>
+      <td>Собрали ещё ответы → кнопка → новый анализ за ~3 минуты</td>
+    </tr>
+    <tr>
+      <td><span class="highlight-green">Масштабируемость</span></td>
+      <td>Кластер, пулинг, rate limiting — готово к нагрузке</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ===================== SLIDE: FINAL CTA ===================== -->
+<section data-background-gradient="radial-gradient(ellipse at 50% 50%, rgba(108,99,255,0.12) 0%, transparent 65%)">
+  <div class="cta-box">
+    <h2 style="text-align:center; margin-bottom:16px;">Это не «сайт с формой»</h2>
+    <p style="text-align:center; font-size:0.95em; color:#ccc;">Это <strong style="color:#fff;">полноценная аналитическая платформа</strong><br>с защитой данных корпоративного уровня</p>
+    <div style="display:flex; justify-content:center; gap:30px; margin-top:30px;">
+      <div class="stat-item">
+        <div class="number">5</div>
+        <div class="label">шагов AI</div>
+      </div>
+      <div class="stat-item">
+        <div class="number">10</div>
+        <div class="label">уровней защиты</div>
+      </div>
+      <div class="stat-item">
+        <div class="number">3</div>
+        <div class="label">формата отчётов</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    width: 1280,
+    height: 720,
+    margin: 0.08,
+    transition: 'slide',
+    transitionSpeed: 'default',
+    backgroundTransition: 'fade',
+    center: true,
+    controls: true,
+    progress: true,
+    mouseWheel: false
+  });
+</script>
+</body>
+</html>
