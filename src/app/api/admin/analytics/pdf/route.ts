@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import PDFDocument from 'pdfkit'
+import path from 'path'
 
 const FIELD_RU: Record<string, string> = {
   age: 'Возраст', gender: 'Пол', occupation: 'Род деятельности',
@@ -36,7 +37,11 @@ export async function GET(request: NextRequest) {
   const dateStr = `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`
 
   // Build PDF in memory
+  const fontDir = path.join(process.cwd(), 'fonts')
   const doc = new PDFDocument({ size: 'A4', margin: 50, bufferPages: true })
+  doc.registerFont('Sans', path.join(fontDir, 'DejaVuSans.ttf'))
+  doc.registerFont('Sans-Bold', path.join(fontDir, 'DejaVuSans-Bold.ttf'))
+  doc.font('Sans')
   const chunks: Buffer[] = []
   doc.on('data', (c: Buffer) => chunks.push(c))
 
@@ -59,8 +64,8 @@ export async function GET(request: NextRequest) {
     heading(doc, 'Рекомендации')
     for (const r of data.recommendations) {
       checkPage(doc)
-      doc.fontSize(10).font('Helvetica-Bold').text(`● ${r.action}`, { continued: false })
-      doc.font('Helvetica').fontSize(9).fillColor('#555')
+      doc.fontSize(10).font('Sans-Bold').text(`● ${r.action}`, { continued: false })
+      doc.font('Sans').fontSize(9).fillColor('#555')
       doc.text(`  Приоритет: ${levelRu(r.priority)}  |  Персона: ${r.target_persona || '–'}  |  Срок: ${r.timeline || '–'}`)
       if (r.details) doc.text(`  ${r.details}`, { lineGap: 2 })
       doc.fillColor('#000').moveDown(0.4)
@@ -73,8 +78,8 @@ export async function GET(request: NextRequest) {
     heading(doc, 'Риски')
     for (const r of data.risks) {
       checkPage(doc)
-      doc.fontSize(10).font('Helvetica-Bold').text(`▲ ${r.risk}`)
-      doc.font('Helvetica').fontSize(9).fillColor('#555')
+      doc.fontSize(10).font('Sans-Bold').text(`▲ ${r.risk}`)
+      doc.font('Sans').fontSize(9).fillColor('#555')
       doc.text(`  Вероятность: ${levelRu(r.probability)}  |  Влияние: ${levelRu(r.impact)}`)
       if (r.mitigation) doc.text(`  Митигация: ${r.mitigation}`, { lineGap: 2 })
       doc.fillColor('#000').moveDown(0.4)
@@ -87,8 +92,8 @@ export async function GET(request: NextRequest) {
     heading(doc, 'Целевые персоны')
     for (const p of data.personas) {
       checkPage(doc)
-      doc.fontSize(11).font('Helvetica-Bold').text(`${p.name} (${p.size_percent}%)`)
-      doc.font('Helvetica').fontSize(9).fillColor('#555')
+      doc.fontSize(11).font('Sans-Bold').text(`${p.name} (${p.size_percent}%)`)
+      doc.font('Sans').fontSize(9).fillColor('#555')
       if (p.description) doc.text(p.description)
       const demo = [p.demographics?.age, p.demographics?.gender, p.demographics?.occupation].filter(Boolean).join(', ')
       if (demo) doc.text(`Демография: ${demo}`)
@@ -105,8 +110,8 @@ export async function GET(request: NextRequest) {
     heading(doc, 'Матрица спроса')
     for (const d of data.demandMatrix) {
       checkPage(doc)
-      doc.fontSize(10).font('Helvetica-Bold').text(d.content_type, { continued: true })
-      doc.font('Helvetica').fontSize(9).text(`  — спрос: ${d.demand_score}, WTP: ${d.wtp_score}, возможность: ${levelRu(d.opportunity)}`)
+      doc.fontSize(10).font('Sans-Bold').text(d.content_type, { continued: true })
+      doc.font('Sans').fontSize(9).text(`  — спрос: ${d.demand_score}, WTP: ${d.wtp_score}, возможность: ${levelRu(d.opportunity)}`)
       if (d.notes) doc.fontSize(9).fillColor('#555').text(`  ${d.notes}`).fillColor('#000')
       doc.moveDown(0.3)
     }
@@ -163,8 +168,8 @@ export async function GET(request: NextRequest) {
 
 function heading(doc: PDFKit.PDFDocument, text: string) {
   checkPage(doc)
-  doc.fontSize(14).font('Helvetica-Bold').fillColor('#1a56db').text(text)
-  doc.moveDown(0.3).fillColor('#000').font('Helvetica')
+  doc.fontSize(14).font('Sans-Bold').fillColor('#1a56db').text(text)
+  doc.moveDown(0.3).fillColor('#000').font('Sans')
 }
 
 function checkPage(doc: PDFKit.PDFDocument) {
